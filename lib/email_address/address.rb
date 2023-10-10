@@ -11,7 +11,7 @@ module EmailAddress
     include Comparable
     include Rewriter
 
-    attr_accessor :original, :local, :host, :config, :reason, :locale
+    attr_accessor :original, :local, :host, :recipient_name, :config, :reason, :locale
 
     CONVENTIONAL_REGEX = /\A#{Local::CONVENTIONAL_MAILBOX_WITHIN}
                            @#{Host::DNS_HOST_REGEX}\z/x
@@ -19,6 +19,7 @@ module EmailAddress
                            @#{Host::DNS_HOST_REGEX}\z/x
     RELAXED_REGEX = /\A#{Local::RELAXED_MAILBOX_WITHIN}
                            @#{Host::DNS_HOST_REGEX}\z/x
+    EXTRACT_RECIPIENT_REGEX = /\A(.*?)\s*<([^>]+)>\z/x
 
     # Given an email address of the form "local@hostname", this sets up the
     # instance, and initializes the address to the "normalized" format of the
@@ -28,6 +29,12 @@ module EmailAddress
       @original = email_address
       @locale = locale
       email_address = (email_address || "").strip
+
+      if config[:with_recipient_name] && (matches = EXTRACT_RECIPIENT_REGEX.match(email_address))
+        email_address = matches[2]
+        @recipient_name = matches[1]
+      end
+
       email_address = parse_rewritten(email_address) unless config[:skip_rewrite]
       local, host = Address.split_local_host(email_address)
 
@@ -220,8 +227,8 @@ module EmailAddress
 
       # Does "root@*.com" match "root@example.com" domain name
       rules.each do |r|
-        if /.+@.+/.match?(r)
-          return r if File.fnmatch?(r, to_s)
+        if /.+@.+/.match?(r) && File.fnmatch?(r, to_s)
+          return r
         end
       end
       false

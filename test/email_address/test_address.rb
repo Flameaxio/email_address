@@ -9,6 +9,15 @@ class TestAddress < Minitest::Test
     assert_equal :default, a.provider
   end
 
+  def test_address_with_recipient_name
+    a = EmailAddress.new("John Doe <User+tag@example.com>", with_recipient_name: true)
+    assert_equal "John Doe", a.recipient_name
+    assert_equal "user+tag", a.local.to_s
+    assert_equal "example.com", a.host.to_s
+    assert_equal "us*****@ex*****", a.munge
+    assert_equal :default, a.provider
+  end
+
   # LOCAL
   def test_local
     a = EmailAddress.new("User+tag@example.com")

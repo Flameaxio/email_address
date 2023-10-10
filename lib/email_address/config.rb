@@ -128,6 +128,7 @@ module EmailAddress
       mailbox_size: 1..64, # without tag
       mailbox_canonical: nil, # nil,  Proc
       mailbox_validator: nil, # nil,  Proc
+      with_recipient_name: false, # true, false
 
       host_encoding: :punycode || :unicode,
       host_validation: :mx || :a || :connect || :syntax,
